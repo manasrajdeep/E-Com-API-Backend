@@ -76,17 +76,62 @@ class ProductRepository{
         }
     }
 
-    //rating
+    // //rating if rating already there we will update the rating 
+    // async rating(userID,productId,ratings){
+    //     try{
+    //     const db=getDB();
+    //     const collection=db.collection(this.collection);
+    //     //1.Find the product
+    //     const product=await collection.findOne({_id:new ObjectId(productId)});
+    //     //2.Find the rating
+    //     const userRating=product?.rating?.find(r=>r.userID==userID);
+    //     if(userRating){
+    //         //3.Update the rating
+    //         console.log(userRating)
+    //         await collection.updateOne({
+    //             _id:new ObjectId(productId),"rating.userID":new ObjectId(userID)
+    //         },{
+    //             $set:{"rating.$.ratings":ratings}
+    //         })
+    //     }else{
+    //     await collection.updateOne(
+    //         {
+    //             _id:new ObjectId(productId)
+    //         },
+    //         {
+    //             $push:{rating:{userID:new ObjectId(userID),ratings}}
+    //         }
+    //     )}
+    // }catch(err){
+    //     console.log(err);
+    //     throw new ApplicationError('something went wrong',500)
+
+    // }
+    // }
+
+    //#better approach rating if rating already there we will Remove the rating
     async rating(userID,productId,ratings){
         try{
         const db=getDB();
         const collection=db.collection(this.collection);
-        const result=collection.updateOne(
+        
+        //1. Remove the existing rating 
+         await collection.updateOne(
             {
                 _id:new ObjectId(productId)
             },
             {
-                $push:{rating:{userID,ratings}}
+                $pull:{rating:{userID:new ObjectId(userID)}}
+            }
+        )
+
+        //Add new rating
+        await collection.updateOne(
+            {
+                _id:new ObjectId(productId)
+            },
+            {
+                $push:{rating:{userID:new ObjectId(userID),ratings}}
             }
         )
     }catch(err){

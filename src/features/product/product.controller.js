@@ -54,7 +54,7 @@ export  default class ProductController {
     async rateProduct(req, res) {
         const userID=req.userID;
         const productID=req.body.productID;
-        const rating=req.query.rating;
+        const rating=req.body.rating;
         const error=await this.ProductRepository.rating(userID,productID,rating);
         if(error){
             res.status(400).send(error);
