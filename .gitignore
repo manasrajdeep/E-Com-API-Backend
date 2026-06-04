@@ -1,2 +1,5 @@
-/.env
+.env
+env.js
+log.txt
+/uploads
 /node_modules
