@@ -1,0 +1,12 @@
+ProductController
+GET Products
+ADD a Product
+Get one Product
+Rate Product
+filter Product
+
+
+UserController
+SignUp-Email,Name,Password,TypeOfUser(customer,Seller) 
+SignIn-(Email,Password)
+
