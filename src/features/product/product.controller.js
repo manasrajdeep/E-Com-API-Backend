@@ -119,4 +119,15 @@ export  default class ProductController {
     //     res.status(200).send(filteredProducts);
     // }
 
+
+    //calculate average price (aggrigate function)
+    async averagePrice(req,res,next){
+        try{
+            const result=await this.ProductRepository.averageProductPricePerCategory();
+            res.status(200).send(result);
+        }catch(err){
+            console.log(err);
+        }
+    }
+
 }
