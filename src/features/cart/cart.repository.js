@@ -7,6 +7,8 @@ export default class CartItemRepository{
     async add(product,userId,quantity){
         const db=getDB();
         const collection=db.collection(this.collection);
+        
+        //Insertion
         const newItems=await collection.insertOne({product:new ObjectId(product),userId:new ObjectId(userId),quantity})
 
     }
