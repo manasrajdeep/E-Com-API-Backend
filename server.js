@@ -14,6 +14,7 @@ import jwtAuth from "./src/middlewares/jwt.middleware.js";
 import cartRouter from "./src/features/cart/cart.router.js";
 import loggerMiddleware from "./src/middlewares/logger.middleware.js";
 import {connectToMongoDB} from "./src/config/mongodb.js";
+import orderRouter from "./src/features/order/order.router.js";
 
 //create server using express
 const app = express();
@@ -40,6 +41,7 @@ app.use(loggerMiddleware);
 // app.get('/products',ProductController.getAllProducts);
 //for all requests related to product, redirect to product routes.
 //localhost:3200/api/products
+app.use("/api/orders",jwtAuth,orderRouter);
 app.use("/api/products", jwtAuth, productRouter);
 app.use("/api/cart", jwtAuth, cartRouter);
 app.use("/api/user", UserRouter);
