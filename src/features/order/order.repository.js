@@ -1,5 +1,5 @@
 import { ObjectId } from "mongodb";
-import { getDB } from "../../config/mongodb.js"
+import { getClient, getDB } from "../../config/mongodb.js"
 import OrderModel from "./order.model.js";
 
 export default class OrderRepository{
@@ -9,48 +9,65 @@ export default class OrderRepository{
     }
 
     async placeOrder(userId){
+        const client=getClient();
+        const session=client.startSession();
        try{ 
+    
         const db=getDB();
+        //start the transaction
+        session.startTransaction();
+
+
 
         //1.Get cartItems and calculate total amount.
-        const items = await this.getTotalAmount(userId);
+        const items = await this.getTotalAmount(userId,session);
         const finaltotalAmount=items.reduce((acc,item)=>acc+item.totalAmount,0);
         console.log(finaltotalAmount);
        
+
         //2.Create an order record.
         const newOrder = new OrderModel(new ObjectId(userId),finaltotalAmount,new Date());
-        db.collection(this.collection).insertOne(newOrder);
+        await db.collection(this.collection).insertOne(newOrder,{session});
         
 
         //3.Reduce the stock.
         for(let item of items){
             await db.collection("products").updateOne(
-                {_id:item.productID},
-                {$inc:{stock:-item.quantity}}
+                {_id:item.product},
+                {$inc:{stock:-item.quantity}},
+                {session}
             )
         }
-        throw new Error("Something is wrong i placeOrder");
+        // throw new Error("Something is wrong in placeOrder");
         
+
         //4 Clear the cart Items.
         await db.collection("cartItems").deleteMany({
             userId: new ObjectId(userId)
-        });
+        },{session});
+        session.commitTransaction();
+        session.endSession();
         return;
 
        }catch(err){
+        await session.abortTransaction();
+        session.endSession();
         console.log(err);
        }
     }
-    async getTotalAmount(userId){
+    async getTotalAmount(userId,session){
         const db=getDB();
 
        const items= await db.collection("cartItems").aggregate([
-            //1.Get cart items for the user
+           
+        
+        //1.Get cart items for the user
             {
                 $match:{userId:new ObjectId(userId)}
             },
             {
-                //2.Get the products from products collection
+               
+        //2.Get the products from products collection
                 $lookup:{
                     from:"products",
                     localField:"product",
@@ -59,7 +76,8 @@ export default class OrderRepository{
                 }
             },
             {
-                //3.Unwind the productInfo
+        
+        //3.Unwind the productInfo
                 $unwind:"$productInfo"
             },
             {
@@ -70,7 +88,7 @@ export default class OrderRepository{
                     }
                 }
             }
-        ]).toArray();
+        ],{session}).toArray();
         return items;
     }
     }
