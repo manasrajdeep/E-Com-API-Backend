@@ -15,6 +15,7 @@ import cartRouter from "./src/features/cart/cart.router.js";
 import loggerMiddleware from "./src/middlewares/logger.middleware.js";
 import {connectToMongoDB} from "./src/config/mongodb.js";
 import orderRouter from "./src/features/order/order.router.js";
+import { connectUsingMongoose } from "./src/config/mongooseConfig.js";
 
 //create server using express
 const app = express();
@@ -59,7 +60,8 @@ app.use((req, res) => {
 //Specify the port number
 app.listen(3000, () => {
   console.log("server is running on port 3000");
-  connectToMongoDB();
+  // connectToMongoDB();
+  connectUsingMongoose();
 });
 
 console.log('Server is running at 3000')

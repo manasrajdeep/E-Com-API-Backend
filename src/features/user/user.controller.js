@@ -1,6 +1,6 @@
 import UserModel from "./user.model.js"; 
 import jwt from "jsonwebtoken";  
-import UserRepository from "./user.repository.js";
+import UserRepository from "./user.repository_mongoose.js";
 import bcrypt from 'bcrypt';
 import { ApplicationError } from "../../error-handler/applicationError.js";
 
@@ -18,6 +18,21 @@ export default class UserController {
 //         res.status(201).send(newUser);
 //     }
 
+
+async resetPassword(req,res,next){
+    const {newPassword}=req.body;
+    const hashedPassword=await bcrypt.hash(newPassword,12);
+    const userID=req.userID;
+    try{
+        await this.UserRepository.resetPassword(userID,hashedPassword)
+        res.status(200).send("Password Reset")
+    }catch(err){
+        console.log(err);
+        next(err);
+    }
+}
+
+
 //calling Signup function from userRepository
    async signUp(req,res){
         const {name,email,password,type}=req.body;
@@ -25,7 +40,7 @@ export default class UserController {
         const hashedPassword=await bcrypt.hash(password,12);
 
         const newUser=new UserModel(name,email,hashedPassword,type);
-        await this.UserRepository.SignUp(newUser);
+        await this.UserRepository.signUp(newUser);
         res.status(201).send(newUser);
     }
 
