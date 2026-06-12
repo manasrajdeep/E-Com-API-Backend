@@ -14,4 +14,16 @@ export const likeSchema=new mongoose.Schema({
         enum:['Product','Category']
     }
 
+}).pre('save',(next)=>{
+    console.log("New like is coming in");
+    next();
+}).post('save',(doc)=>{
+    console.log("Like is saved");
+    console.log(doc);
+}).pre('find',(next)=>{
+    console.log("Retriving likes");
+    next();
+}).post('find',(docs)=>{
+    console.log("Find is completed");
+    console.log(docs);
 })
