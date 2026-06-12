@@ -16,6 +16,10 @@ import loggerMiddleware from "./src/middlewares/logger.middleware.js";
 import {connectToMongoDB} from "./src/config/mongodb.js";
 import orderRouter from "./src/features/order/order.router.js";
 import { connectUsingMongoose } from "./src/config/mongooseConfig.js";
+import likeRouter from "./src/features/like/like.router.js";
+
+
+
 
 //create server using express
 const app = express();
@@ -46,6 +50,7 @@ app.use("/api/orders",jwtAuth,orderRouter);
 app.use("/api/products", jwtAuth, productRouter);
 app.use("/api/cart", jwtAuth, cartRouter);
 app.use("/api/user", UserRouter);
+app.use('/api/likes',jwtAuth,likeRouter);
 
 //default request handler
 app.get("/", (req, res) => {
