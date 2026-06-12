@@ -1,7 +1,14 @@
 import { ObjectId } from "mongodb";
 import { getDB } from "../../config/mongodb.js";
 import { ApplicationError } from "../../error-handler/applicationError.js";
+import mongoose from "mongoose";
+import { reviewSchema } from "./review.schema.js";
+import { productSchema } from "./product.schema.js";
+import { categorySchema } from "./category.schema.js";
 
+    const ProductModel=mongoose.model('Product',productSchema)
+    const ReviewModel=mongoose.model('Review',reviewSchema)
+    const CategoryModel=mongoose.model('Category',categorySchema)
 class ProductRepository{
     constructor(){
         this.collection="products"
@@ -9,13 +16,27 @@ class ProductRepository{
 
     async add(newProduct){
         try{
-            //get the database
-        const db=getDB();
-        //get the collection 
-        const collection=db.collection(this.collection);
-        //Insert the document
-        await collection.insertOne(newProduct);
-        return newProduct;
+        //     //get the database
+        // const db=getDB();
+        // //get the collection 
+        // const collection=db.collection(this.collection);
+        // //Insert the document
+        // await collection.insertOne(newProduct);
+        // return newProduct;
+
+        //adding product by mongoose
+        //1.Add the product
+        newProduct.categories=newProduct.category.split(',').map(e=>e.trim());
+        const Product=new ProductModel(newProduct);
+        const savedProduct=await Product.save();
+
+        //2.Update categories
+        await CategoryModel.updateMany(
+            {_id:{$in: newProduct.categories}},
+            {
+                $push:{products:new ObjectId(savedProduct._id)}
+            }
+        );
         }catch(err){
             console.log(err);
             throw new ApplicationError("something went wrong",500)
@@ -109,37 +130,70 @@ class ProductRepository{
     // }
     // }
 
-    //#better approach rating if rating already there we will Remove the rating
+    // //#better approach rating if rating already there we will Remove the rating
+    // async rating(userID,productId,ratings){
+    //     try{
+    //     const db=getDB();
+    //     const collection=db.collection(this.collection);
+        
+    //     //1. Remove the existing rating 
+    //      await collection.updateOne(
+    //         {
+    //             _id:new ObjectId(productId)
+    //         },
+    //         {
+    //             $pull:{rating:{userID:new ObjectId(userID)}}
+    //         }
+    //     )
+
+    //     //Add new rating
+    //     await collection.updateOne(
+    //         {
+    //             _id:new ObjectId(productId)
+    //         },
+    //         {
+    //             $push:{rating:{userID:new ObjectId(userID),ratings}}
+    //         }
+    //     )
+    // }catch(err){
+    //     console.log(err);
+    //     throw new ApplicationError('something went wrong',500)
+
+    // }
+    // }
+
+
+    //Rating by using mongoose to have multiple rating 
     async rating(userID,productId,ratings){
         try{
-        const db=getDB();
-        const collection=db.collection(this.collection);
-        
-        //1. Remove the existing rating 
-         await collection.updateOne(
-            {
-                _id:new ObjectId(productId)
-            },
-            {
-                $pull:{rating:{userID:new ObjectId(userID)}}
+            //1.check if products exists
+            const productToUpdate=await ProductModel.findById(productId);
+            if(!productToUpdate){
+                throw new Error("Product not found");
             }
-        )
+            //2.get the existing review
+            const userReview=await ReviewModel.findOne({product:new ObjectId(productId),user:new ObjectId(userID)})
+            if(userReview){
+                userReview.rating=ratings;
+                await userReview.save();
+            }
+            else{
+                const newReview =new ReviewModel({
+                    product:new ObjectId(productId),
+                    user:new ObjectId(userID),
+                    rating:ratings
 
-        //Add new rating
-        await collection.updateOne(
-            {
-                _id:new ObjectId(productId)
-            },
-            {
-                $push:{rating:{userID:new ObjectId(userID),ratings}}
+                })
+                newReview.save();
             }
-        )
     }catch(err){
         console.log(err);
         throw new ApplicationError('something went wrong',500)
 
     }
-    }
+    } 
+
+
 
     async averageProductPricePerCategory(){
         try{
