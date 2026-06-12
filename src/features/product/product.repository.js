@@ -16,7 +16,7 @@ class ProductRepository{
 
     async add(newProduct){
         try{
-        //     //get the database
+        //get the database
         // const db=getDB();
         // //get the collection 
         // const collection=db.collection(this.collection);
